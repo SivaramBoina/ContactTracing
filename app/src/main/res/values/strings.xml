@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">ContactTracing</string>
+    <string name="start_service">Start Service</string>
+    <string name="stop_service">Stop Service</string>
+    <string name="check_traces">Check Traces</string>
+    <string name="enter_user_name">Enter user name</string>
+    <string name="user_name">User Name</string>
+    <string name="contact_number">Contact Number</string>
+    <string name="username_hint">Enter your name</string>
+    <string name="password_hint">Enter your password</string>
+    <string name="email_hint">Enter your email address</string>
+    <string name="phone_number_hint">Enter your phone number</string>
+    <string name="btnSignUp">Sign Up</string>
+    <string name="btn_login">Login</string>
+</resources>
