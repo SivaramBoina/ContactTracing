@@ -15,11 +15,12 @@ import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
 import android.os.ParcelUuid;
-import android.text.TextUtils;
 import android.util.Log;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import com.sivaram.contacttracing.sharedpref.SharedPref;
+import com.sivaram.contacttracing.utils.Constants;
+import com.sivaram.contacttracing.utils.Utility;
+
 import java.util.UUID;
 
 /**
@@ -95,9 +96,9 @@ public class GattServer {
             if (defaultAdapter == null) {
                 return;
             }
-            if (Constants.ADAPTER_NAME.isEmpty()) {
+            /*if (Constants.ADAPTER_NAME.isEmpty()) {
                 return;
-            }
+            }*/
             if (!Constants.ADAPTER_NAME.equalsIgnoreCase(defaultAdapter.getName())) {
                 stopAdvertising();
             }

@@ -1,4 +1,4 @@
-package com.sivaram.contacttracing;
+package com.sivaram.contacttracing.sharedpref;
 
 import android.content.Context;
 import android.content.SharedPreferences;

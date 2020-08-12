@@ -1,4 +1,4 @@
-package com.sivaram.contacttracing;
+package com.sivaram.contacttracing.service;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -22,34 +22,60 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelUuid;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.sivaram.contacttracing.utils.Constants;
+import com.sivaram.contacttracing.ContactTracingApplication;
+import com.sivaram.contacttracing.GattServer;
+import com.sivaram.contacttracing.activities.MainActivity;
+import com.sivaram.contacttracing.R;
+import com.sivaram.contacttracing.sharedpref.SharedPref;
+import com.sivaram.contacttracing.helpers.TracedContact;
+import com.sivaram.contacttracing.utils.Utility;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import static android.content.ContentValues.TAG;
-import static com.sivaram.contacttracing.Constants.NOTIF_ID;
-import static com.sivaram.contacttracing.Utility.deviceDB;
-import static com.sivaram.contacttracing.Utility.isBluetoothAvailable;
+import static com.sivaram.contacttracing.utils.Constants.NOTIF_ID;
+import static com.sivaram.contacttracing.utils.Utility.isBluetoothAvailable;
 
 
 public class BluetoothScanningService extends Service {
 
-    private static final int FIVE_MINUTES = 1 * 60 * 1000;
-    private long searchTimestamp;
+    private static final int FIVE_MINUTES = 3 * 60 * 1000;
 
     public static boolean serviceRunning = false;
     private final GattServer mGattServer = new GattServer();
     private Timer timer;
     private BluetoothLeScanner mBluetoothLeScanner;
-    private String loggedUsername=Constants.EMPTY,loggedPhoneNumber=Constants.EMPTY;
+    private String loggedPhoneNumber=Constants.EMPTY;
+
+    //Handle these fields before using them in storeDetectedUserDeviceInDB() function
+    public boolean foundDuplicate = false;
+    public boolean traceNotExistsBefore = true;
+    Date curDate;
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US);
+
     @SuppressLint("SimpleDateFormat")
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy(HH.mm.ss)");
 
@@ -60,23 +86,20 @@ public class BluetoothScanningService extends Service {
             Log.d(TAG,"onScanResult entered");
             if (Utility.isBluetoothPermissionAvailable(ContactTracingApplication.instance)) {
                 if (result != null && result.getDevice() != null && result.getDevice().getName() != null){
-                    String deviceName = result.getDevice().getName();
-                    String username = Constants.EMPTY;
                     List<ParcelUuid> uuid = result.getScanRecord().getServiceUuids();
                     String recUUID=uuid.get(0).toString();
-                    String contact=Constants.EMPTY;
-                    contact= parseContactFromUUID(recUUID);
-                    String rssi = String.valueOf(result.getRssi());
-                    Date date = new Date();
-                    String time = sdf.format(date.getTime());
-                    //clearList(); //todo handle this area for clearing the list
-                    BluetoothModel bluetoothModel = new BluetoothModel();
-                    //storeDetectedUserDeviceInDB(bluetoothModel);
-                    bluetoothModel.setContact(contact);
-                    bluetoothModel.setRssi(rssi);
-                    bluetoothModel.setTime(time);
-                    deviceDB.add(bluetoothModel);
-                    Log.d(TAG, "onScanResult : Result updated to list");
+                    String phonecontact=Constants.EMPTY;
+                    if(recUUID.length()==36 && !TextUtils.isEmpty(loggedPhoneNumber)){
+                        phonecontact= parseContactFromUUID(recUUID);
+                        String rssi = String.valueOf(Math.abs(result.getRssi()));
+                        Date time =new Date();
+                        SimpleDateFormat dt = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US);
+                        String stringDate = dt.format(time);
+                        //clearList(); //todo handle this area for clearing the list
+                        TracedContact objTracedContact = new TracedContact(loggedPhoneNumber,phonecontact,rssi,stringDate);
+                        storeDetectedUserDeviceInDB(objTracedContact);
+                        Log.d(TAG, "onScanResult : Result updated to list");
+                    }
                 }
             }
         }
@@ -116,11 +139,99 @@ public class BluetoothScanningService extends Service {
         }
     };
 
+
+    private void storeDetectedUserDeviceInDB(final TracedContact objTracedContact) {
+        foundDuplicate=false;
+        traceNotExistsBefore = false;
+        final Date curDate = new Date();
+        final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US);
+        //check if exists
+        //Query query = FirebaseDatabase.getInstance().getReference("traces").child(objTracedContact.getContact_id()).orderByKey().equalTo(objTracedContact.getTraced_contact());
+        Query query = FirebaseDatabase.getInstance().getReference("traces").child(objTracedContact.getContact_id()).child(objTracedContact.getTraced_contact()).orderByChild("traced_contact").equalTo(objTracedContact.getTraced_contact());
+        /* databaseReference = FirebaseDatabase.getInstance().getReference("traces").child("9989773947");*/
+        Log.d("Check","Database  reference!!");
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()) {
+                    traceNotExistsBefore = false;
+                    Log.d("Check","Trace exists!!");
+                    for (DataSnapshot eachSnapshot: snapshot.getChildren()) {
+                        try{
+                            String eachTime = eachSnapshot.child("time").getValue(String.class);
+                            Date eachDate = dateFormatter.parse(eachTime);
+                            if(Math.abs(curDate.getTime() - eachDate.getTime()) <= 3*60*1000){
+                                Log.d("Check","Duplicate found!");
+                                foundDuplicate = true;
+                            }
+                        }catch(Exception e){
+                            Log.d("Check","Exception occurred");
+                        }
+                    }
+                }else{
+                    Log.d("Check","Trace does not found : Add the trace");
+                    traceNotExistsBefore = true;
+                }
+                if(traceNotExistsBefore || !foundDuplicate){
+                    Log.d("Check","No duplicate found : Adding the trace...");
+                    DatabaseReference databaseUsers = FirebaseDatabase.getInstance().getReference("traces");
+                    //String newId = databaseUsers.push().getKey();
+                    //databaseUsers.child(objTracedContact.getContact_id()).child(newId).setValue(objTracedContact);
+                    databaseUsers.child(objTracedContact.getContact_id()).child(objTracedContact.getTraced_contact()).child(objTracedContact.getTime()).setValue(objTracedContact);
+                }else{
+                    Log.d("Check","Duplicate found "+ objTracedContact.getTraced_contact());
+                }
+                /*if(traceNotExistsBefore ){
+                    Log.d("Check","Found duplicate : "+objTracedContact.getTraced_contact());
+                }else{
+                    Log.d("Check","No duplicate found : Adding the trace...");
+                    DatabaseReference databaseUsers = FirebaseDatabase.getInstance().getReference("traces");
+                    String newId = databaseUsers.push().getKey();
+                    databaseUsers.child(objTracedContact.getContact_id()).child(newId).setValue(objTracedContact);
+                    *//*databaseUsers.child(objTracedContact.getContact_id()).child(newId).setValue(objTracedContact).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d("Check","Successfully added "+objTracedContact.getTraced_contact()+" to recent traces...");
+                            ContactTracingApplication.toastMessage("Successfully added trace");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            ContactTracingApplication.toastMessage("Failed to add trace");
+                        }
+                    });*//*
+                }*/
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d("Check","On Cancelled triggered with error : "+error.getMessage());
+            }
+        });
+
+        //Saving the traced contact if no duplicates found
+        /*if(!foundDuplicate){
+            DatabaseReference databaseUsers = FirebaseDatabase.getInstance().getReference("traces");
+            String newId = databaseUsers.push().getKey();
+            databaseUsers.child(objTracedContact.getContact_id()).child(newId).setValue(objTracedContact).addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    ContactTracingApplication.toastMessage("Successfully added recent trace!");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    ContactTracingApplication.toastMessage("Failed to add trace!");
+                }
+            });
+        }*/
+    }
+
     private String parseContactFromUUID(String recUUID) {
 
         String contact=Constants.EMPTY;
         contact=recUUID.replace("-","");
-        contact=(contact.split("0a")[1]).substring(0,10);
+        contact=contact.substring(0,10);
         return contact;
     }
 
@@ -140,15 +251,13 @@ public class BluetoothScanningService extends Service {
         createNotificationChannel();
         Notification notification = getNotification(Constants.NOTIFICATION_DESC);
         startForeground(NOTIF_ID, notification);
-        searchTimestamp = System.currentTimeMillis();
     }
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         serviceRunning=true;
-        loggedUsername=SharedPref.getStringParams(ContactTracingApplication.getInstance(), Constants.USERNAME, Constants.EMPTY);
-        loggedPhoneNumber=SharedPref.getStringParams(ContactTracingApplication.getInstance(), Constants.PHONE, Constants.EMPTY);
+        loggedPhoneNumber=SharedPref.getStringParams(ContactTracingApplication.getInstance(), Constants.SESSION_CONTACT, Constants.EMPTY);
         Utility.SERVICE_UUID=preparedUuid();
         //Check parameters and update notification accordingly
         configureNotification();
@@ -166,7 +275,7 @@ public class BluetoothScanningService extends Service {
 
     private String preparedUuid() {
         int data_idx=0,uuid_idx=0;
-        String realData = "0a".concat(loggedPhoneNumber);
+        String realData = loggedPhoneNumber;
         final int REAL_DATA_LENGTH = realData.length();
         String SERVICE_UUID="f55e5de6-52d7-400b-b4dc-230eb8812d2c";
         String updatedUUID=Constants.EMPTY;
@@ -182,10 +291,6 @@ public class BluetoothScanningService extends Service {
             uuid_idx=uuid_idx+1;
         }
         updatedUUID=new String(uuidArray);
-        //updatedUUID = "0a630583-9271-400b-b4dc-sivaramredmi";
-        //updatedUUID = "0a630583-9271-0a4s-i4va-4ra4mr4ed4mi";
-        //updatedUUID = "0a630583-9271-400b-b4dc-230eb8812d2c";
-        //updatedUUID = "0a6s3i0v5a8r3a9m2r7e1dmi";
         return updatedUUID;
     }
 
@@ -280,7 +385,7 @@ public class BluetoothScanningService extends Service {
 
         ScanFilter filter = new ScanFilter.Builder()
                 //.setServiceUuid(new ParcelUuid(UUID.fromString(Constants.SERVICE_UUID)))
-                .setDeviceName("Trace")
+                .setDeviceName(Constants.ADAPTER_NAME)
                 .build();
         filters.add(filter);
         ScanSettings.Builder settings = new ScanSettings.Builder()

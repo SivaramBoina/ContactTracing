@@ -2,7 +2,7 @@
     <string name="app_name">ContactTracing</string>
     <string name="start_service">Start Service</string>
     <string name="stop_service">Stop Service</string>
-    <string name="check_traces">Check Traces</string>
+    <string name="check_traces">Find Traces</string>
     <string name="enter_user_name">Enter user name</string>
     <string name="user_name">User Name</string>
     <string name="contact_number">Contact Number</string>
@@ -12,4 +12,17 @@
     <string name="phone_number_hint">Enter your phone number</string>
     <string name="btnSignUp">Sign Up</string>
     <string name="btn_login">Login</string>
+    <string name="clcik_2_login">Already have account, Click to Login</string>
+    <string name="remember_me">Remember me</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="click_2_create_accouunt">Don\'t have account, Click to SignUp</string>
+    <string name="log_out">Log Out</string>
+    <string name="back_button">Back</string>
+    <string name="tip_text">Tip: Click on list to find detailed history of each contact</string>
+    <string name="no_traces">No traces found!</string>
+    <string name="rssi">Rssi</string>
+    <string name="time">Time</string>
+    <string name="detailed_tip_text_error">No traces found (or) something error occurred!</string>
+    <string name="detailed_tip_text_success">Details of rssi and time traces :</string>
+
 </resources>

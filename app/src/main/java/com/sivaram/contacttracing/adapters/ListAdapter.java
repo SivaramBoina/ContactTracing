@@ -1,4 +1,4 @@
-package com.sivaram.contacttracing;
+package com.sivaram.contacttracing.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,16 +7,18 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
+import com.sivaram.contacttracing.R;
+import com.sivaram.contacttracing.helpers.TracedContact;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListAdapter extends BaseAdapter {
 
     private Context context;
-    private List<BluetoothModel> traces;
+    private ArrayList<TracedContact> traces;
 
-    public ListAdapter(Context context, List<BluetoothModel> traces) {
+    public ListAdapter(Context context, ArrayList<TracedContact> traces) {
         this.context = context;
         this.traces = traces;
     }
@@ -45,13 +47,13 @@ public class ListAdapter extends BaseAdapter {
             convertView = (View) inflater.inflate(R.layout.row_layout, null);
         }
 
-        TextView textViewContact = (TextView)convertView.findViewById(R.id.trace_contact);
-        TextView textViewRssi=(TextView)convertView.findViewById(R.id.trace_rssi);
-        TextView textViewTime =(TextView)convertView.findViewById(R.id.trace_time);
+        TextView textViewRssi = (TextView)convertView.findViewById(R.id.rssi_textView);
+        TextView textViewTime=(TextView)convertView.findViewById(R.id.time_textview);
+        String curRssi =  traces.get(position).getRssi();
+        String curTime = traces.get(position).getTime();
 
-        textViewContact.setText(traces.get(position).getContact());
-        textViewRssi.setText(traces.get(position).getRssi());
-        textViewTime.setText(traces.get(position).getTime());
+        textViewRssi.setText(curRssi);
+        textViewTime.setText(curTime);
 
         return convertView;
     }

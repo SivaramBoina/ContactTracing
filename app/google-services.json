@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "483211966368",
+    "firebase_url": "https://contact-tracing-7349d.firebaseio.com",
+    "project_id": "contact-tracing-7349d",
+    "storage_bucket": "contact-tracing-7349d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:483211966368:android:75e0c05f0eae0995f856c5",
+        "android_client_info": {
+          "package_name": "com.sivaram.contacttracing"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "483211966368-2g1ecd35grkolclq813sojtdh9alf2b3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHXtG5HxdtjPvVteoUP9uuwvic86XQNfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "483211966368-2g1ecd35grkolclq813sojtdh9alf2b3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

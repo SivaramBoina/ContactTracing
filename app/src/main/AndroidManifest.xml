@@ -17,15 +17,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LauncherActivity">
+        <activity android:name=".activities.DetailedTracesActivity"/>
+        <activity android:name=".activities.LoginLauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".TracedContacts" />
-        <activity android:name=".MainActivity"/>
-        <service android:name=".BluetoothScanningService" />
+        <activity android:name=".activities.SignUpActivity" />
+        <activity android:name=".activities.TracedContacts" />
+        <activity android:name=".activities.MainActivity" />
+
+        <service android:name=".service.BluetoothScanningService" />
     </application>
 
 </manifest>
