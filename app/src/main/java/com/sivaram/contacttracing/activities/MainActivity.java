@@ -47,7 +47,7 @@ import static com.sivaram.contacttracing.utils.Constants.REQUEST_ENABLE_BT;
 import static com.sivaram.contacttracing.ContactTracingApplication.toastMessage;
 
 public class MainActivity extends AppCompatActivity {
-    Button btnStartService, btnStopService,btnCheckTraces,btnLogOut;
+    Button btnStartService, btnStopService,btnCheckTraces,btnLogOut,btnFetchUsers;
     TextView textViewUserName;
 
     //todo delete
@@ -61,12 +61,14 @@ public class MainActivity extends AppCompatActivity {
         btnStopService = (Button) findViewById(R.id.btn_stopService);
         btnCheckTraces = (Button) findViewById(R.id.btn_checkTraces);
         btnLogOut=(Button)findViewById(R.id.btn_logout);
+        btnFetchUsers=(Button)findViewById(R.id.btn_admin);
 
         //Setting listeners for UI elements
         btnStartService.setOnClickListener(onClickListener);
         btnStopService.setOnClickListener(onClickListener);
         btnCheckTraces.setOnClickListener(onClickListener);
         btnLogOut.setOnClickListener(onClickListener);
+        btnFetchUsers.setOnClickListener(onClickListener);
         //Check if Bluetooth is enabled
         isBluetoothEnabled();
     }
@@ -77,7 +79,12 @@ public class MainActivity extends AppCompatActivity {
         String sessionContact = SharedPref.getStringParams(ContactTracingApplication.getInstance(), Constants.SESSION_CONTACT,Constants.EMPTY);
         String sessionUsername = SharedPref.getStringParams(ContactTracingApplication.getInstance(),Constants.SESSION_USERNAME,Constants.EMPTY);
         if(!TextUtils.isEmpty(sessionUsername)){
-            textViewUserName.setText(sessionUsername);
+            textViewUserName.setText("Hello "+sessionUsername);
+            if(sessionContact.equals("8985373384")){
+                btnFetchUsers.setVisibility(View.VISIBLE);
+            }else{
+                btnFetchUsers.setVisibility(View.INVISIBLE);
+            }
         }else{
             ContactTracingApplication.toastMessage("Internal error occurred");
             SharedPref.setStringParams(ContactTracingApplication.getInstance(),Constants.SESSION_CONTACT,Constants.EMPTY);
@@ -164,6 +171,12 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(logOutIntent);
                 }
                 break;
+                case R.id.btn_admin:
+                {
+                    Intent adminIntent =  new Intent(MainActivity.this,AdminActivity.class);
+                    startActivity(adminIntent);
+                }
+                break;
             }
         }
     };
@@ -186,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
                     for (DataSnapshot eachSnapshot: snapshot.getChildren()) {
                         try{
                             String eachTime = eachSnapshot.child("time").getValue(String.class);
+                            assert eachTime != null;
                             Date eachDate = dateFormatter.parse(eachTime);
                             if(Math.abs(curDate.getTime() - eachDate.getTime()) <= 10*60*1000){
                                 Log.d("Check","Duplicate found!");

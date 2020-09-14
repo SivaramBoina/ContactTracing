@@ -52,8 +52,8 @@ public class ListAdapter extends BaseAdapter {
         String curRssi =  traces.get(position).getRssi();
         String curTime = traces.get(position).getTime();
 
-        textViewRssi.setText(curRssi);
-        textViewTime.setText(curTime);
+        textViewRssi.setText(String.format("Rssi : %s", curRssi));
+        textViewTime.setText(String.format("Time : %s", curTime));
 
         return convertView;
     }

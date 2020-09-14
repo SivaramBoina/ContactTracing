@@ -24,5 +24,6 @@
     <string name="time">Time</string>
     <string name="detailed_tip_text_error">No traces found (or) something error occurred!</string>
     <string name="detailed_tip_text_success">Details of rssi and time traces :</string>
+    <string name="admin_btn">Fetch Traces</string>
 
 </resources>

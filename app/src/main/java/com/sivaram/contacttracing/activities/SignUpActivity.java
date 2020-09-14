@@ -105,7 +105,7 @@ public class SignUpActivity extends AppCompatActivity {
                                         ContactTracingApplication.toastMessage("SignUp Successful!");
                                         SharedPref.setStringParams(ContactTracingApplication.getInstance(),Constants.SESSION_CONTACT,phonenumber);
                                         SharedPref.setStringParams(ContactTracingApplication.getInstance(),Constants.SESSION_USERNAME,username);
-                                        SharedPref.setStringParams(ContactTracingApplication.getInstance(),Constants.SESSION_USERNAME,password);
+                                        SharedPref.setStringParams(ContactTracingApplication.getInstance(),Constants.SESSION_PASSWORD,password);
                                         gotoMainActivity();
                                     }
                                 }).addOnFailureListener(new OnFailureListener() {

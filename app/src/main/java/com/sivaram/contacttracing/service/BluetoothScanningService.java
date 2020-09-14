@@ -91,14 +91,17 @@ public class BluetoothScanningService extends Service {
                     String phonecontact=Constants.EMPTY;
                     if(recUUID.length()==36 && !TextUtils.isEmpty(loggedPhoneNumber)){
                         phonecontact= parseContactFromUUID(recUUID);
-                        String rssi = String.valueOf(Math.abs(result.getRssi()));
-                        Date time =new Date();
-                        SimpleDateFormat dt = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US);
-                        String stringDate = dt.format(time);
-                        //clearList(); //todo handle this area for clearing the list
-                        TracedContact objTracedContact = new TracedContact(loggedPhoneNumber,phonecontact,rssi,stringDate);
-                        storeDetectedUserDeviceInDB(objTracedContact);
-                        Log.d(TAG, "onScanResult : Result updated to list");
+                        int rssi = Math.abs(Math.abs(result.getRssi()));
+                        if(rssi<= 80 && isValidPhoneNumber(phonecontact)){
+                            String rssi_txt = String.valueOf(rssi);
+                            Date time =new Date();
+                            SimpleDateFormat dt = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US);
+                            String stringDate = dt.format(time);
+                            //clearList();
+                            TracedContact objTracedContact = new TracedContact(loggedPhoneNumber,phonecontact,rssi_txt,stringDate);
+                            storeDetectedUserDeviceInDB(objTracedContact);
+                            Log.d(TAG, "onScanResult : Result updated to list");
+                        }
                     }
                 }
             }
@@ -138,6 +141,15 @@ public class BluetoothScanningService extends Service {
             }
         }
     };
+
+    public static boolean isValidPhoneNumber(CharSequence target) {
+        if (target == null || TextUtils.isEmpty(target)) {
+            return false;
+        } else {
+            return android.util.Patterns.PHONE.matcher(target).matches();
+        }
+    }
+
 
 
     private void storeDetectedUserDeviceInDB(final TracedContact objTracedContact) {
